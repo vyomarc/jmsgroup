@@ -75,31 +75,46 @@ function navigate(pageId) {
     loop: true
   });
   
-  // Counter Animation (Intersection Observer)
-  const counters = document.querySelectorAll('.stat-number');
-  const startCounting = (el) => {
-    const target = parseInt(el.getAttribute('data-target'), 10);
-    let count = 0;
-    const updateCounter = () => {
-      if (count < target) {
-        count++;
-        el.innerText = count;
-        requestAnimationFrame(updateCounter);
-      } else {
-        el.innerText = target;
-      }
-    };
-    updateCounter();
+// Counter Animation with custom step for the 500 counter
+const counters = document.querySelectorAll('.stat-number');
+
+const startCounting = (el) => {
+  const target = parseInt(el.getAttribute('data-target'), 10);
+  let start = 0;
+  let step = 1;
+  
+  // Special handling for the 500 counter (Students Enrolled)
+  if (target === 500) {
+    start = 10;
+    step = 10;
+  }
+  
+  let current = start;
+  // Increment until we reach or exceed target
+  const updateCounter = () => {
+    if (current < target) {
+      current += step;
+      if (current > target) current = target; // clamp
+      el.innerText = current;
+      requestAnimationFrame(updateCounter);
+    } else {
+      el.innerText = target;
+    }
   };
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        startCounting(entry.target);
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.5 });
-  counters.forEach(counter => observer.observe(counter));
+  updateCounter();
+};
+
+// Intersection Observer to trigger counters when they become visible
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      startCounting(entry.target);
+      observer.unobserve(entry.target); // run only once
+    }
+  });
+}, { threshold: 0.4 }); // slightly lower threshold for better mobile trigger
+
+counters.forEach(counter => observer.observe(counter));
   
   // Ensure home is active on page load (if no hash)
   document.addEventListener('DOMContentLoaded', () => {
